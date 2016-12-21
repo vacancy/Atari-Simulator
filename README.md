@@ -31,3 +31,6 @@ Now it's time to play the game. Use:
 Note at any time you can use 'quit' action to quit your play. After you press the 'quit' button or when the game normally ends, a replay pickle will placed in the replay folder.
 
 One tricky thing is that you can adjust the fps for the game if you want to play it in a slower mode.
+
+## Dumped replays
+The replay file can be loaded by module `pickle` without any dependency (oh, `numpy` is needed). The only tricky thing in the replay file is that for easier usage, the observation in each 'step' actually refer to the last observation. That is, for a dict in `replay['steps']`, `action` (and `reward`) is the `action` (and `reward`) human expert plays after seeing `observation`.
