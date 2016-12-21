@@ -5,7 +5,7 @@
 # 
 # This file is part of Atari-Simulator.
 
-import tkinter as tk
+import Tkinter as tk
 import threading
 import time
 
