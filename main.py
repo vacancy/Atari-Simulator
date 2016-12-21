@@ -77,10 +77,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('cfg')
     parser.add_argument('-fps', '--fps', dest='fps', default=24, type=int)
-    parser.add_argument('-sfps', '--screen-fps', dest='sfps', default=100, type=int)
-    
-    controller = Controller()
-    thread = threading.Thread(target=main, args=(parser.parse_args(), controller))
+    parser.add_argument('-rfps', '--render-fps', dest='rfps', default=100, type=int)
+    args = parser.parse_args()
+
+    controller = Controller(fps=args.rfps)
+    thread = threading.Thread(target=main, args=(args, controller))
 
     thread.start()
     controller.mainloop()
