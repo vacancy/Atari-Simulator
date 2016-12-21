@@ -70,7 +70,6 @@ def main(args, controller):
         pack.step(action, *res)
 
     dump_pack(cfg, pack)
-    from IPython import embed; embed()
 
 
 if __name__ == '__main__':
