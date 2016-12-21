@@ -8,30 +8,37 @@
 import argparse
 import pickle
 import time
+import threading
 import gym
 import cv2
 import os.path as osp
 
+from asim.controller import Controller
 from asim.utils import load_module_filename, scale
 from asim.pack import Pack 
 
 __quit_action__ = 32767
+__window_size__ = (600, 800)
 
-def vis_and_action(args, cfg, observation):
-    display = scale(observation, 600, 800)[:, :, ::-1]
-    cv2.imshow(cfg.name, display)
-   
-    # while True:
-    if True:
-        action = cv2.waitKey(int(1000 / args.fps))
-        for i in range(len(cfg.action_keys)):
-            if action == cfg.action_keys[i]:
-                print('action: {}'.format(cfg.action_names[i]))
-                return i
-        if action == cfg.quit_action_key:
-            return __quit_action__
-        print('invalid action: {}'.format(action))
-        return 0
+
+def vis_and_action(args, cfg, controller, observation):
+    display = scale(observation, *__window_size__)
+    controller.update(display)
+  
+    action = 0
+    for i in reversed(range(len(cfg.action_keys))):
+        if controller.test_key(cfg.action_keys[i]): 
+            print('action: {}'.format(cfg.action_names[i]))
+            action = i
+            break
+
+    if controller.test_key(cfg.quit_action_key):
+        action = __quit_action__
+
+    time.sleep((1.0/ args.fps))
+
+    return action
+
 
 def dump_pack(cfg, pack):
     pickleable = pack.make_pickleable()
@@ -44,16 +51,17 @@ def dump_pack(cfg, pack):
     print('replay written to replays/{}'.format(name))
 
 
-def main(args):
+def main(args, controller):
     cfg = load_module_filename(args.cfg)
     pack = Pack(cfg)
 
+    controller.update_title(cfg.name)
     game = gym.make(cfg.name)
     obs = game.reset()
     pack.reset(obs)
    
     while not pack.is_ended:
-        action = vis_and_action(args, cfg, obs)
+        action = vis_and_action(args, cfg, controller, obs)
         if action == __quit_action__:
             break
 
@@ -68,6 +76,12 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('cfg')
-    parser.add_argument('-fps', '--fps', dest='fps', default=24)
-    main(parser.parse_args())
+    parser.add_argument('-fps', '--fps', dest='fps', default=24, type=int)
+    parser.add_argument('-sfps', '--screen-fps', dest='sfps', default=100, type=int)
     
+    controller = Controller()
+    thread = threading.Thread(target=main, args=(parser.parse_args(), controller))
+
+    thread.start()
+    controller.mainloop()
+  

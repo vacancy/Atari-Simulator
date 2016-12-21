@@ -8,11 +8,14 @@
 import argparse
 import gym
 import cv2
+import threading
+from PIL import Image
 
+from asim.controller import Controller
 from asim.utils import scale
 
 
-def main(args):
+def main(args, controller):
     game = gym.make(args.gamename)
     obs = game.reset()
     action_names = game.get_action_meanings()
@@ -20,19 +23,22 @@ def main(args):
 
     print('All action names: {}'.format(action_names))
     print('Start recording...')
+    
+    img = scale(obs, 600, 800)
+    controller.update_title(args.gamename)
+    controller.update(img)
 
-    cv2.imshow(args.gamename, scale(obs, 600, 800)[:, :, ::-1])
     for i in range(len(action_names)):
         name = action_names[i]
         print('{}-th action, name={}, waiting...'.format(i, name))
-        action = cv2.waitKey(0)
+        action = controller.get_last_key()
         action_keys.append(action)
-        print('{}-th action, name={}, key={}, done.'.format(i, name, action))
+        print('{}-th action, name={}, key={}, done.'.format(i, name, repr(action)))
     print('Recording end.')
 
     print('Recoding quit action key')
-    quit_key = cv2.waitKey(0)
-    print('quick action, key={}, done.'.format(quit_key))
+    quit_key = controller.get_last_key() 
+    print('quit action, key={}, done.'.format(repr(quit_key)))
 
     with open(args.cfg, 'w') as f:
         f.write("name = '{}'\n".format(args.gamename))
@@ -46,5 +52,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('cfg')
     parser.add_argument('gamename')
-    main(parser.parse_args())
+
+    controller = Controller()
+    thread = threading.Thread(target=main, args=(parser.parse_args(), controller))
+
+    thread.start()
+    controller.mainloop()
    
