@@ -87,10 +87,10 @@ class Controller(object):
 
     def __press(self, event):
         with self.__lock:
-            self.records[event.char] = True
-            self.last_key = event.char
+            self.records[event.keysym_num] = True
+            self.last_key = event.keysym_num
 
     def __release(self, event):
         with self.__lock:
-            self.records[event.char] = False
+            self.records[event.keysym_num] = False
 
